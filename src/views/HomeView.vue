@@ -1,18 +1,27 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+  <v-app>
+    <v-main>
+      <!-- <PlayerStatusInsertCmp /> -->
+      <MonsterStatusInsertCmp />
+
+      <!-- <TestCmp /> -->
+    </v-main>
+  </v-app>
 </template>
 
 <script>
 // @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
+// import HelloWorld from "@/components/HelloWorld.vue";
+import MonsterStatusInsertCmp from "@/components/MonsterStatusInsertCmp.vue";
+// import PlayerStatusInsertCmp from "@/components/PlayerStatusInsertCmp.vue";
+// import TestCmp from "@/components/TestCmp.vue";
 
 export default {
-  name: 'HomeView',
+  name: "HomeView",
   components: {
-    HelloWorld
-  }
-}
+    MonsterStatusInsertCmp,
+    // TestCmp,
+    // PlayerStatusInsertCmp,
+  },
+};
 </script>
