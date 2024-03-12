@@ -2,65 +2,162 @@
   <v-container>
     <v-card class="mt-10 pa-4" elevation="12">
       <v-card-title>
-        캐릭터 초기 입력
-        <v-btn class="ml-5" @click="addMonsterRow">+</v-btn>
-        <v-btn class="ml-5" @click="save">저장</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn class="ml-5" @click="move">전투화면</v-btn>
+        <v-btn class="primary mr-3" @click="fetchMonstersData()"
+          >데이터 가져오기</v-btn
+        >
+        몬스터 입력
+
+        <v-col>
+          <v-row>
+            <v-col cols="3">
+              <v-text-field
+                ref="nameInput"
+                v-model="name"
+                label="몬스터 이름"
+                @keyup.enter="$refs.initiativeInput.focus()"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="3">
+              <v-text-field
+                ref="initiativeInput"
+                v-model="initiative"
+                label="우선권 보정치"
+                @keyup.enter="$refs.acInput.focus()"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="3">
+              <v-text-field
+                ref="acInput"
+                v-model="ac"
+                label="AC"
+                @keyup.enter="$refs.hpInput.focus()"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="3">
+              <v-text-field
+                ref="hpInput"
+                v-model="hp"
+                label="HP"
+                @keyup.enter="enter"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </v-col>
       </v-card-title>
-      <v-row v-for="(monster, index) in monsters" :key="index" justify="center">
-        <v-col cols="3">
-          <v-text-field v-model="monster.name" label="이름"></v-text-field>
-        </v-col>
-        <v-col cols="3">
-          <v-text-field
-            v-model="monster.initiative"
-            label="우선권 보정치"
-          ></v-text-field>
-        </v-col>
-        <v-col cols="3">
-          <v-text-field v-model="monster.ac" label="AC"></v-text-field>
-        </v-col>
-        <v-col cols="3">
-          <v-text-field v-model="monster.hp" label="HP"></v-text-field>
+
+      <v-row>
+        <v-col cols="12">
+          <v-simple-table>
+            <template v-slot:default>
+              <thead>
+                <tr>
+                  <th class="text-left">몬스터 이름</th>
+                  <th class="text-left">AC</th>
+                  <th class="text-left">우선권</th>
+                  <th class="text-left">HP</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in monsters" :key="item.name">
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.ac }}</td>
+                  <td>{{ item.initiative }}</td>
+                  <td>{{ item.hp }}</td>
+                </tr>
+              </tbody>
+            </template>
+          </v-simple-table>
         </v-col>
       </v-row>
-
-      <!-- + 버튼 -->
     </v-card>
   </v-container>
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import axios from "axios";
+import { mapActions, mapGetters } from "vuex";
 
 export default {
   name: "MonsterStatusInsertCmp",
 
   data() {
     return {
-      monsters: [
-        { name: "", initiative: "", ac: "", hp: "", cumulativeDamage: 0 },
-      ], // 초기에 하나의 몬스터를 갖고 시작
+      monsters: [], // 초기에 하나의 몬스터를 갖고 시작
+      name: "",
+      ac: "",
+      hp: "",
+      initiative: "",
     };
   },
   methods: {
     ...mapActions("monster", ["saveMonsters"]),
     enter() {
-      alert("hello");
-    },
-    addMonsterRow() {
-      // + 버튼을 누를 때마다 새로운 몬스터 행을 추가
-      this.monsters.push({ name: "", initiative: "", ac: "", hp: "" });
-    },
-    save() {
-      console.log(this.monsters);
+      const data = {
+        type: "m", // monster type
+        name: this.name,
+        ac: this.ac,
+        hp: this.hp,
+        hp_tmp: "",
+        initiative: this.initiative,
+        initiative_tmp: "",
+        initiative_cal: "",
+      };
+
+      this.monsters.push(data);
+
       this.saveMonsters(this.monsters);
-      // alert("몬스터 정보가 저장되었습니다.");
+
+      console.log(this.monsters);
+
+      this.init_input();
+
+      this.$refs.nameInput.focus(); // 입력 필드로 포커스 이동
     },
-    move() {
-      this.$router.push("/battle");
+    init_input() {
+      this.name = "";
+      this.ac = "";
+      this.hp = "";
+      this.initiative = "";
     },
+    async fetchMonstersData() {
+      try {
+        const response = await axios.get(
+          "https://raw.githubusercontent.com/Cobb-Yoo/D-D_Monsters_Status/main/monsters.json"
+        );
+
+        // 이미 JSON 형식으로 제공되기 때문에 추가적인 파싱이 필요하지 않습니다.
+        //this.monsters = response.data;
+
+        response.data.forEach((item) => {
+          const data = {
+            type: "m", // monster type
+            name: item.NAME,
+            ac: item.AC,
+            hp: item.HP,
+            hp_tmp: "",
+            initiative: item.INITIATIVE,
+            initiative_tmp: "",
+            initiative_cal: "",
+          };
+
+          this.monsters.push(data);
+
+          this.saveMonsters(this.monsters);
+
+          this.$refs.nameInput.focus(); // 입력 필드로 포커스 이동
+        });
+
+        // console.log(this.monsters);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    },
+  },
+  computed: {
+    ...mapGetters("monster", ["getMonsters"]),
+  },
+  created() {
+    this.monsters = this.getMonsters;
   },
 };
 </script>
